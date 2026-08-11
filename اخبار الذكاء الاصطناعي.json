@@ -1,0 +1,177 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 16
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d30d231b-cace-4062-aa66-cbd902e32061",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://techcrunch.com/category/artificial-intelligence/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "fa511e01-6fe2-4e13-b1ad-f9f3ee96b343",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-flash-latest",
+          "mode": "list",
+          "cachedResultName": "models/gemini-flash-latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=\"أنت محرر تقني خبير ومتابع نهم لأحدث تطورات الذكاء الاصطناعي والتكنولوجيا.\nمهمتك هي تحليل عناوين وملخصات الأخبار التالية واستخراج أهم 3 إلى 4 أخبار أو تحديثات جوهرية فقط.\n\nشروط كتابة الملخص:\n\nاللغة: لغة عربية سليمة، بأسلوب مشوق، بسيط، وسهل الهضم (مرحباً باستخدام مصطلحات تقنية مبسطة).\n\nالتنسيق: استخدم النقاط (Bullet points) لتنظيم الكلام، وضع \"إيموجي\" (Emoji) معبر في بداية كل نقطة.\n\nالمحتوى: ركز على الخلاصة المفيدة (إيه هو الخبر؟ وليه هو مهم؟). لا تقم بترجمة حرفية، بل قدم المعنى والخلاصة.\n\nالخاتمة: اختم الملخص بجملة تشجيعية قصيرة لبداية اليوم.\n\nإليك الأخبار المراد تلخيصها:\n{{ $json.title }}\n{{ $json.contentSnippet }}\n\n\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "8fb509ef-5ebf-4154-abff-217f0f0df123",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "U3L1lEXgbcUuvytn",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "title"
+            },
+            {
+              "fieldToAggregate": "contentSnippet"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "bc328c2f-fcb3-45d7-8880-36a70c0287e5",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "chatId": "8994973962",
+        "text": "={{ $json.content.parts[0].text }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "42c445b4-5cc5-46e4-a8fe-a90ad582985a",
+      "name": "Send a text message",
+      "webhookId": "00df5149-6022-42d1-a24e-933e25c485bf",
+      "credentials": {
+        "telegramApi": {
+          "id": "lhfSP1zi9VJSVwLs",
+          "name": "Telegram account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "74818d7a-8d34-4977-a337-b8b36a804668",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7611743a8e2cb2bd25e3f6253dbb489380517b57f3952ad3da4812b98d633e1a"
+  },
+  "nodeGroups": [],
+  "id": "uNjQzvKXzjk3Y2fc",
+  "tags": []
+}
