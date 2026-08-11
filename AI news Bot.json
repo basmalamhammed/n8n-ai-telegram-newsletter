@@ -1,0 +1,424 @@
+{
+  "name": "My workflow copy",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 17
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "508b4e87-136e-417c-927c-f702caa66df3",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://techcrunch.com/category/artificial-intelligence/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "624662ea-e0a1-4e5e-a43c-546165083d82",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-flash-latest",
+          "mode": "list",
+          "cachedResultName": "models/gemini-flash-latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=\"أنت محرر تقني خبير ومتابع نهم لأحدث تطورات الذكاء الاصطناعي والتكنولوجيا.\nمهمتك هي تحليل عناوين وملخصات الأخبار التالية واستخراج أهم 3 إلى 4 أخبار أو تحديثات جوهرية فقط.\n\nشروط كتابة الملخص:\n\nاللغة: لغة عربية سليمة، بأسلوب مشوق، بسيط، وسهل الهضم (مرحباً باستخدام مصطلحات تقنية مبسطة).\n\nالتنسيق: استخدم النقاط (Bullet points) لتنظيم الكلام، وضع \"إيموجي\" (Emoji) معبر في بداية كل نقطة.\n\nالمحتوى: ركز على الخلاصة المفيدة (إيه هو الخبر؟ وليه هو مهم؟). لا تقم بترجمة حرفية، بل قدم المعنى والخلاصة.\n\nالخاتمة: اختم الملخص بجملة تشجيعية قصيرة لبداية اليوم.\n\nإليك الأخبار المراد تلخيصها:\n{{ $json.title }}\n{{ $json.contentSnippet }}\n\n\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        0
+      ],
+      "id": "8864ccee-209b-4a9c-a7fa-24a1cdb29e0d",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "U3L1lEXgbcUuvytn",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "title"
+            },
+            {
+              "fieldToAggregate": "contentSnippet"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        672,
+        0
+      ],
+      "id": "ca92eb0d-20c8-4fbd-81b8-8e92eb6a96fe",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json[\"Chat ID\"] }}",
+        "text": "={{ $('Message a model').item.json.content.parts[0].text }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1408,
+        -32
+      ],
+      "id": "153dfc0a-f331-4101-9d18-3bb38efe4a28",
+      "name": "Send a text message",
+      "webhookId": "aa082997-f598-47b4-bb7a-e21f1017b64b",
+      "credentials": {
+        "telegramApi": {
+          "id": "lhfSP1zi9VJSVwLs",
+          "name": "Telegram account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        304,
+        416
+      ],
+      "id": "afb76ede-cc71-403a-83bd-6ddff6d7e32d",
+      "name": "Telegram Trigger",
+      "webhookId": "2cac176b-6ef9-469c-92a9-374f34150c14",
+      "credentials": {
+        "telegramApi": {
+          "id": "lhfSP1zi9VJSVwLs",
+          "name": "Telegram account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3fb30f5a-1888-4ae9-96dd-53aa4fe719bb",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "/start",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "01d5fd21-b077-404c-a062-3958e76d4d5c",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        528,
+        416
+      ],
+      "id": "a9567265-d65d-4148-83a3-347d8ee8503f",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1BhTgT5gHzQyiEG-vByIoHGJTT_4wxUBqVxJGvzx9bSM",
+          "mode": "list",
+          "cachedResultName": "AI Newsletter Subscribers.",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BhTgT5gHzQyiEG-vByIoHGJTT_4wxUBqVxJGvzx9bSM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BhTgT5gHzQyiEG-vByIoHGJTT_4wxUBqVxJGvzx9bSM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Chat ID": "={{ $json.message.from.id }}",
+            "Name": "={{ $json.message.from.first_name }}",
+            "Date": "={{ $json.message.date }}"
+          },
+          "matchingColumns": [
+            "Chat ID"
+          ],
+          "schema": [
+            {
+              "id": "Chat ID",
+              "displayName": "Chat ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        752,
+        416
+      ],
+      "id": "4e2b0221-b690-4721-9861-7f588c357293",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kdy5GzuhdP6WnVXC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json[\"Chat ID\"] }}",
+        "text": "مساء الفل يصحبي معاك دراكولا (بسملة محمد يعني ) عشان متتعبش نفسك كل يوم الساعه 5 العصر في ال رايق منه كده هبعتلك اخر اخبار الذكاء الاصطناعي",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        976,
+        416
+      ],
+      "id": "5d1d163f-be9a-48d8-840e-736e9d5df086",
+      "name": "Send a text message1",
+      "webhookId": "ef9e7ee1-b18b-4baa-8fae-1699b16cb9af",
+      "credentials": {
+        "telegramApi": {
+          "id": "lhfSP1zi9VJSVwLs",
+          "name": "Telegram account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1BhTgT5gHzQyiEG-vByIoHGJTT_4wxUBqVxJGvzx9bSM",
+          "mode": "list",
+          "cachedResultName": "AI Newsletter Subscribers.",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BhTgT5gHzQyiEG-vByIoHGJTT_4wxUBqVxJGvzx9bSM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BhTgT5gHzQyiEG-vByIoHGJTT_4wxUBqVxJGvzx9bSM/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1248,
+        0
+      ],
+      "id": "ca9bad99-eb76-4648-b82f-14939695cd40",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kdy5GzuhdP6WnVXC",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message1": {
+      "main": [
+        []
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "0cc322da-83d3-4605-ab01-90bf9906faa0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7611743a8e2cb2bd25e3f6253dbb489380517b57f3952ad3da4812b98d633e1a"
+  },
+  "nodeGroups": [],
+  "id": "9Olbfbnehcsny4LG",
+  "tags": []
+}
